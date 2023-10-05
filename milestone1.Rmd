@@ -182,7 +182,9 @@ vancouver_trees_conifers <- vancouver_trees1 %>%
 
 <!--- *****START HERE***** --->
 1) Which neighborhood has the biggest trees?
-2)  
+2) Are older trees larger?
+3) Are conifers more popular than non-conifers?
+4) 
 <!----------------------------->
 
 # Overall reproducibility/Cleanliness/Coherence Checklist 
