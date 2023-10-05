@@ -84,10 +84,10 @@ And that is exactly the first thing that you will do!
 
 <!-------------------------- Start your work below ---------------------------->
 
-1: CHOICE_1\_HERE\
-2: CHOICE_2\_HERE\
-3: CHOICE_3\_HERE\
-4: CHOICE_4\_HERE
+1: apt_buildings
+2: flow_sample
+3: steam_games
+4: vancouver_trees
 
 <!----------------------------------------------------------------------------->
 
@@ -99,7 +99,17 @@ And that is exactly the first thing that you will do!
 
 ```{r}
 ### EXPLORE HERE ###
-steam_games
+glimpse(steam_games)
+head(steam_games)
+
+glimpse(apt_buildings)
+head(apt_buildings)
+
+glimpse(flow_sample)
+head(flow_sample)
+
+glimpse(vancouver_trees)
+head(vancouver_trees)
 ```
 
 <!----------------------------------------------------------------------------->
@@ -107,13 +117,13 @@ steam_games
 1.3 **(1 point)** Now that you've explored the 4 datasets that you were initially most interested in, let's narrow it down to 1. What lead you to choose this one? Briefly explain your choice below.
 
 <!-------------------------- Start your work below ---------------------------->
-
+I will be working with the vancouver_trees dataset. It is similar to the kind of datasets I will be using in my Master's project and I think that I can ask similar questions, so this will be very helpful for me in the long run.
 <!----------------------------------------------------------------------------->
 
 1.4 **(2 points)** Time for a  final decision! Going back to the beginning, it's important to have an *end goal* in mind. For example, if I had chosen the `titanic` dataset for my project, I might've wanted to explore the relationship between survival and other variables. Try to think of 1 research question that you would want to answer with your dataset. Note it down below.
 
 <!-------------------------- Start your work below ---------------------------->
-
+How do the diameter of trees across the city. (relationship between diameter and other variables)
 <!----------------------------------------------------------------------------->
 
 # Important note
@@ -131,10 +141,31 @@ If we rewind and go back to the learning objectives, you'll see that by the end 
 Make sure that you're using dplyr and ggplot2 rather than base R for this task. Outside of this project, you may find that you prefer using base R functions for certain tasks, and that's just fine! But part of this project is for you to practice the tools we learned in class, which is dplyr and ggplot2.
 
 1.  Plot the distribution of a numeric variable.
+```{r}
+ggplot(vancouver_trees,aes(diameter)) +
+  geom_histogram(binwidth=5, colour="black", fill="white") +
+  xlim(0,100)
+```
 2.  Create a new variable based on other variables in your data (only if it makes sense)
+```{r}
+vancouver_trees1 <- vancouver_trees %>%
+  mutate(age = (Sys.Date()-vancouver_trees$date_planted)/365)
+
+```
 3.  Investigate how many missing values there are per variable. Can you find a way to plot this?
 4.  Explore the relationship between 2 variables in a plot.
+```{r}
+ggplot(vancouver_trees1, aes(x=curb, y=diameter)) +
+  geom_jitter(width=.01, alpha=.1) 
+
+```
 5.  Filter observations in your data according to your own criteria. Think of what you'd like to explore - again, if this was the `titanic` dataset, I may want to narrow my search down to passengers born in a particular year...
+```{r}
+sort(unique(vancouver_trees$genus_name))
+vancouver_trees_conifers <- vancouver_trees1 %>%
+  filter(genus_name %in% c( "ABIES","ARAUCARIA", "CEDRUS","CALOCEDRUS","CRYPTOMERIA","CHAMAECYPARIS","CUPRESSOCYPARIS   ","JUNIPERUS","METASEQUOIA","PICEA","PINUS","PSEUDOTSUGA","SCIADOPITYS","SEQUOIA","SEQUOIADENDRON","TAXODIUM","TAXUS","THUJA","TSUGA"))
+
+```
 6.  Use a boxplot to look at the frequency of different observations within a single variable. You can do this for more than one variable if you wish!
 7.  Make a new tibble with a subset of your data, with variables and observations that you are interested in exploring.
 8.  Use a density plot to explore any of your variables (that are suitable for this type of plot).
