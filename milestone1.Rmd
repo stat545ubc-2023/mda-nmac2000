@@ -181,7 +181,10 @@ vancouver_trees_conifers <- vancouver_trees1 %>%
 **(4 points)** So far, you have chosen a dataset and gotten familiar with it through exploring the data. You have also brainstormed one research question that interested you (Task 1.4).  Now it's time to pick 4 research questions that you would like to explore in Milestone 2! Write the 4 questions and any additional comments below. 
 
 <!--- *****START HERE***** --->
-
+1) Which neighborhood has the biggest trees?
+2) Are older trees larger?
+3) Are conifers more popular than non-conifers?
+4) 
 <!----------------------------->
 
 # Overall reproducibility/Cleanliness/Coherence Checklist 
