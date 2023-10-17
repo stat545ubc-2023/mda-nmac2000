@@ -107,23 +107,24 @@ vancouver_trees2 <- vancouver_trees
 trees_curb <- vancouver_trees %>% 
   group_by(curb) %>% 
   summarise(curb_count = n())
-
+print(trees_curb)
 curb_plot <- vancouver_trees2 %>% 
   filter(diameter > 10)
   
   
-ggplot(slice_sample(curb_plot, n=10000), aes(diameter, height_range_id, colour = curb)) +
-  geom_point( position = "jitter", alpha=.5) +
+ggplot(curb_plot, aes(diameter, height_range_id, colour = curb)) +
+  geom_point( position = "jitter", alpha=.1, size=.5) +
   geom_smooth(method = "lm") +
   xlim(0,200)
   
- 
+ #geom_hex
 ```
 
 
 #### Are conifers more popular than non-conifers?
 ```{r}
 #need to make a column for each observation stating if it is a conifer or not (based on what I found in Model 1)
+
 trees_species <- vancouver_trees2 %>% 
   filter(!is.na(genus_name)) %>% 
   mutate(con_or_non = case_when(genus_name %in% c( "ABIES","ARAUCARIA", "CEDRUS","CALOCEDRUS","CRYPTOMERIA","CHAMAECYPARIS","CUPRESSOCYPARIS   ","JUNIPERUS","METASEQUOIA","PICEA","PINUS","PSEUDOTSUGA","SCIADOPITYS","SEQUOIA","SEQUOIADENDRON","TAXODIUM","TAXUS","THUJA","TSUGA") ~ "Conifer",
@@ -135,15 +136,12 @@ trees_species2 <- trees_species %>%
   group_by(neighbourhood_name, con_or_non) %>%
   select(neighbourhood_name, con_or_non) %>%
   summarise(con_count = n()) %>%
-  #add proportion
-print(trees_species1)
+  group_by(neighbourhood_name) %>%
+  mutate(sum = sum(con_count)) %>%
+  mutate(proportion = con_count/sum)
+print(trees_species2)
 
-count(filter(trees_species, con_or_non == "Non-Conifer"))
-count(filter(trees_species, con_or_non == "Conifer"))
-
-
-
-ggplot(trees_species1, aes(con_count, neighbourhood_name)) +
+ggplot(trees_species2, aes(con_count, neighbourhood_name)) +
   geom_bar(stat="identity", aes(colour = con_or_non, fill = con_or_non), position = "dodge")
 
 ```
@@ -153,8 +151,9 @@ ggplot(trees_species1, aes(con_count, neighbourhood_name)) +
 ```{r}
 vancouver_trees2 <- vancouver_trees2 %>%  #I calculated age in Milestone1 but the vector was in difftime, not numeric
   mutate(age_num = as.numeric(age)) 
-range(vancouver_trees2$age_num, na.rm = TRUE) #what is the spread of the data
+range(vancouver_trees2$age_num, na.rm = TRUE) #what is the spread of the data so I can decide bin sizes
 trees_age <- vancouver_trees2 %>% 
+  filter(!is.na(age)) %>%
  mutate(age_bins=cut(age_num, breaks = c(-Inf,10,20,Inf), labels=c("sappling", "young", "mature")))
 
 
@@ -162,8 +161,12 @@ ggplot(slice_sample(vancouver_trees2, n=10000), aes(age_num, log(diameter))) +
   geom_point(alpha=.5, size=1, position = "jitter") +
   geom_smooth(method = "glm")
 
-count(filter(vancouver_trees2, is.na(date_planted)))
+
 ```
+
+
+
+
 #### Which neighborhood has the biggest trees?
 ```{r}
 biggest_trees <- vancouver_trees2 %>% 
