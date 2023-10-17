@@ -1,6 +1,6 @@
 ---
 title: "Mini Data-Analysis Deliverable 1"
-output: html_document
+output: github_document
 ---
 
 # Welcome to your (maybe) first-ever data analysis project!
@@ -161,7 +161,7 @@ ggplot(vancouver_trees1, aes(x=curb, y=diameter)) +
 ```
 5.  Filter observations in your data according to your own criteria. Think of what you'd like to explore - again, if this was the `titanic` dataset, I may want to narrow my search down to passengers born in a particular year...
 ```{r}
-sort(unique(vancouver_trees$genus_name))
+sort(unique(vancouver_trees$genus_name))  ##I had to look up each genus name to see what family it was
 vancouver_trees_conifers <- vancouver_trees1 %>%
   filter(genus_name %in% c( "ABIES","ARAUCARIA", "CEDRUS","CALOCEDRUS","CRYPTOMERIA","CHAMAECYPARIS","CUPRESSOCYPARIS   ","JUNIPERUS","METASEQUOIA","PICEA","PINUS","PSEUDOTSUGA","SCIADOPITYS","SEQUOIA","SEQUOIADENDRON","TAXODIUM","TAXUS","THUJA","TSUGA"))
 
@@ -173,7 +173,10 @@ vancouver_trees_conifers <- vancouver_trees1 %>%
 2.2 **(4 points)** For each of the 4 exercises that you complete, provide a *brief explanation* of why you chose that exercise in relation to your data (in other words, why does it make sense to do that?), and sufficient comments for a reader to understand your reasoning and code.
 
 <!-------------------------- Start your work below ---------------------------->
-
+1) I chose to look at the distribution of diameters of trees to get a better understanding of what the dominant size class was, as well as what the outliers looked liked.
+2) I wanted to make a new variable that was the age of each tree (although I guess this probably not the true age because the trees were most likely planted as saplings) But knowing how long ago something was planted will still be a helpful variable to have.
+4) I chose to look at tree diameter vs curb presence because I thought that having a curb might affect tree growth and make it harder for the tree to thrive. However, looking at the chart it seems like there is no relationship or maybe even that the curb is in some way correlated with larger diameters.
+5) I wanted to make a dataset that only has conifers, because their growth form and rates can be quite different from broadleaf tree species. It will be interesting to see how they compare. Additionally, there seems to be so many coniferous hedges planted, but not as many conifer street trees, so I am curious which is the more popular catergory.
 <!----------------------------------------------------------------------------->
 
 # Task 3: Choose research questions 
@@ -184,7 +187,7 @@ vancouver_trees_conifers <- vancouver_trees1 %>%
 1) Which neighborhood has the biggest trees?
 2) Are older trees larger?
 3) Are conifers more popular than non-conifers?
-4) 
+4) Do curbs affect tree growth rigor?
 <!----------------------------->
 
 # Overall reproducibility/Cleanliness/Coherence Checklist 
