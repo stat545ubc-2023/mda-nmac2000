@@ -333,6 +333,12 @@ Take a summary table that you made from Task 1, and write it as a csv file in yo
 -   **Reproducibility criteria**: You should be able to delete the csv file, and remake it simply by knitting this Rmd file.
 
 <!-------------------------- Start your work below ---------------------------->
+```{r}
+#install.packages("here") 
+library(here)
+
+write.csv(biggest_trees, here("Output/biggest_trees.csv"))
+```
 
 <!----------------------------------------------------------------------------->
 
@@ -343,6 +349,9 @@ Write your model object from Task 3 to an R binary file (an RDS), and load it ag
 -   The same robustness and reproducibility criteria as in 4.1 apply here.
 
 <!-------------------------- Start your work below ---------------------------->
+```{r}
+
+```
 
 <!----------------------------------------------------------------------------->
 
