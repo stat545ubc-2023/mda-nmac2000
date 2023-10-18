@@ -153,13 +153,17 @@ vancouver_trees2 <- vancouver_trees2 %>%  #I calculated age in Milestone1 but th
   mutate(age_num = as.numeric(age)) 
 range(vancouver_trees2$age_num, na.rm = TRUE) #what is the spread of the data so I can decide bin sizes
 trees_age <- vancouver_trees2 %>% 
-  filter(!is.na(age)) %>%
- mutate(age_bins=cut(age_num, breaks = c(-Inf,10,20,Inf), labels=c("sappling", "young", "mature")))
+  filter(!is.na(age), diameter>0) %>%
+  mutate(age_bins=cut(age_num, breaks = c(-Inf,10,20,Inf), labels=c("sappling", "young", "mature"))) %>% 
+  mutate(ftcut=cut(height_range_id, breaks = c(-Inf,4,Inf), labels = c("1", "2")))
 
 
-ggplot(slice_sample(vancouver_trees2, n=10000), aes(age_num, log(diameter))) +
-  geom_point(alpha=.5, size=1, position = "jitter") +
-  geom_smooth(method = "glm")
+ggplot(trees_age, aes(age_num, log(diameter))) +
+  geom_point(alpha=.3, size=.5, position = "jitter", aes(colour=ftcut)) +
+  xlab("Age (years)") +
+  ylab("Diameter (logged inches)") +
+  scale_colour_manual(values=c("#CCCCCC", "#99FF33"))
+  
 
 
 ```
