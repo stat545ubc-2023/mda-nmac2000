@@ -98,13 +98,19 @@ vancouver_trees <- vancouver_trees %>%
   mutate(age = (Sys.Date()-vancouver_trees$date_planted)/365) #from Milestone1
 vancouver_trees <- vancouver_trees %>%  #I calculated age in Milestone1 but the vector was in difftime, not numeric
   mutate(age_num = as.numeric(age))
-vancouver_trees2 <- vancouver_trees
+vancouver_trees2 <- vancouver_trees %>% 
+  filter(diameter <100) #some diameters seemed like an incorrect measurement so trying to get rid of the outliers
 ```
 
 
 #### Do curbs affect tree growth vigor?
+2.  Compute the number of observations for at least one of your categorical variables. Do not use the function `table()`!
+This was useful to know how the magnitude of measurements for the two categories differ
+7. Make a graph where it makes sense to customize the alpha transparency.
+8. Create a graph that has at least two geom layers.
+This graph fulfills both of these requirements. I added the lm line to the graph because there are so many points, it's hard to see the trends in the data. Additionally, I customized the alpha so that the large cluster of points had a much lower alpha transparency than the non-clustered points. Otherwise the clustered points were either way too dark or the non-clustered points were really hard to see.
 ```{r}
-trees_curb <- vancouver_trees %>% 
+trees_curb <- vancouver_trees2 %>% 
   group_by(curb) %>% 
   summarise(curb_count = n())
 print(trees_curb)
@@ -113,15 +119,19 @@ curb_plot <- vancouver_trees2 %>%
   
   
 ggplot(curb_plot, aes(diameter, height_range_id, colour = curb)) +
-  geom_point( position = "jitter", alpha=.1, size=.5) +
+  geom_point( position = "jitter", aes(alpha=diameter),size=.5) +
   geom_smooth(method = "lm") +
-  xlim(0,200)
+  xlim(0,100) +
+  scale_alpha(range = c(0.01,1), breaks = c(1,50,100), n.breaks=2, name=NULL,label=NULL)
   
  #geom_hex
 ```
 
 
 #### Are conifers more popular than non-conifers?
+4. Compute the proportion and counts in each category of one categorical variable across the groups of another categorical variable from your data. Do not use the function `table()`!
+This was super helpful and pretty much completely answers the research question.
+?. None of the graph options seemed to make sense for this question, but it was useful to learn how to make a bar graph with two x measurements for each y measurement.
 ```{r}
 #need to make a column for each observation stating if it is a conifer or not (based on what I found in Model 1)
 
@@ -148,6 +158,11 @@ ggplot(trees_species2, aes(con_count, neighbourhood_name)) +
 
 
 #### Are older trees larger?
+3.  Create a categorical variable with 3 or more groups from an existing numerical variable. You can use this new variable in the other tasks! *An example: age in years into "child, teen, adult, senior".*
+This is useful because I can use look at relative size for each age group, as trees grow at different rates depending on if they are fully established.
+6. Create a graph of your choosing, make one of the axes logarithmic, and format the axes labels so that they are "pretty" or easier to read.
+It didn't really make sense for me to use something that was logarithmic here because diameter measurements were not differeing by orders of magnitude 
+
 ```{r}
 vancouver_trees2 <- vancouver_trees2 %>%  #I calculated age in Milestone1 but the vector was in difftime, not numeric
   mutate(age_num = as.numeric(age)) 
@@ -155,14 +170,15 @@ range(vancouver_trees2$age_num, na.rm = TRUE) #what is the spread of the data so
 trees_age <- vancouver_trees2 %>% 
   filter(!is.na(age), diameter>0) %>%
   mutate(age_bins=cut(age_num, breaks = c(-Inf,10,20,Inf), labels=c("sappling", "young", "mature"))) %>% 
-  mutate(ftcut=cut(height_range_id, breaks = c(-Inf,4,Inf), labels = c("1", "2")))
+  mutate(ftcut=cut(height_range_id, breaks = c(-Inf,4,Inf), labels = c("Over 40ft", "Under 40ft
+                                                                       ")))
 
 
 ggplot(trees_age, aes(age_num, log(diameter))) +
   geom_point(alpha=.3, size=.5, position = "jitter", aes(colour=ftcut)) +
   xlab("Age (years)") +
   ylab("Diameter (logged inches)") +
-  scale_colour_manual(values=c("#CCCCCC", "#99FF33"))
+  scale_color_discrete(name="Height")
   
 
 
@@ -172,11 +188,17 @@ ggplot(trees_age, aes(age_num, log(diameter))) +
 
 
 #### Which neighborhood has the biggest trees?
+1.  Compute the *range*, *mean*, and *two other summary statistics* of **one numerical variable** across the groups of **one categorical variable** from your data.
+This is is helpful because I can look at the spread of the data and to start understand how I want to answer the question.
+9. Create 3 histograms, with each histogram having different sized bins. Pick the "best" one and explain why it is the best.
+This wasn't the most helpful, but it was good to see how most trees are in one general size class, with only a few trees deviating from that. This made me start to realize that the diameter column had values that did not make sense (diameter of 11 m)
+
+
 ```{r}
 biggest_trees <- vancouver_trees2 %>% 
   group_by(neighbourhood_name) %>%
   select(neighbourhood_name, diameter, age) %>%
-  filter(diameter > 0, age > 10) %>% #some trees had a zero dbh, which either means that the tree was not yet 1.35m (height of DBH) or was not measured, wanted trees that have had some time to establish
+  filter(diameter > 0, diameter < 80, age > 10) %>% #some trees had a zero dbh, which either means that the tree was not yet 1.35m (height of DBH) or was not measured, wanted trees that have had some time to establish
   summarise(diam_min = min(diameter), #min
          diam_max = max(diameter), #max
          diam_mean = mean(diameter), #mean
@@ -187,13 +209,13 @@ print(biggest_trees)
 arrange(biggest_trees, -diam_mean) %>% #which neighborhood has the widest tree
 print(biggest_trees) 
 
-diam_filtered <- filter(vancouver_trees2, neighbourhood_name%in%c("HASTINGS-SUNRISE","ARBUTUS-RIDGE", "WEST END"), age >10, diameter>30) #Top three highest mean, also trying to get rid of the large number of really small trees in the data set
+diam_filtered <- filter(vancouver_trees2, neighbourhood_name%in%c("HASTINGS-SUNRISE","ARBUTUS-RIDGE", "WEST END"), age >10, diameter>0, diameter < 80) #Top three highest mean, also trying to get rid of the large number of really small trees in the data set
 ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
-  geom_histogram(alpha=0.25, binwidth = 100)
-ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
-  geom_histogram(alpha=0.25, binwidth = 25)
+  geom_histogram(alpha=0.25, binwidth = 20)
 ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
   geom_histogram(alpha=0.25, binwidth = 10)
+ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
+  geom_histogram(alpha=0.25, binwidth = 5)
 ```
 <!----------------------------------------------------------------------------->
 
@@ -202,7 +224,12 @@ ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
 Based on the operations that you've completed, how much closer are you to answering your research questions? Think about what aspects of your research questions remain unclear. Can your research questions be refined, now that you've investigated your data a bit more? Which research questions are yielding interesting results?
 
 <!------------------------- Write your answer here ---------------------------->
+1) Which neighborhood has the biggest trees?
+2) Are older trees larger?
+3) Are conifers more popular than non-conifers?
+4) Do curbs affect tree growth vigor?
 
+Questions 2 and 3 feel pretty much answered from this data exploration. I could dive further into these questions by looking at how things differ by neighborhood (for Q3) or expand what "larger" means (for Q2). Questions 1 and 4 are more interesting questions to continue to look at. For the neighborhood with the largest trees, I can look at overall tallest tree or overall largest diameter or which neighborhood has the highest mean of these categories. For how curbs affect tree growth vigor, I want to see if the diameter and height of trees the same age differ by being curbed or not. I think there are a lot of variable at play here though, because tree species will play a large factor in these things.
 
 <!----------------------------------------------------------------------------->
 
@@ -245,7 +272,7 @@ vancouver_trees2 <- vancouver_trees %>% #tidying the data
 vancouver_trees2 <- vancouver_trees
 glimpse(vancouver_trees2)
 ```
-#### There were a lot of NA values in the age column
+ There were a lot of NA values in the age column
 <!----------------------------------------------------------------------------->
 
 ### 2.3 (4 points)
@@ -344,7 +371,7 @@ Take a summary table that you made from Task 1, and write it as a csv file in yo
 #install.packages("here") 
 library(here)
 
-write.csv(biggest_trees, here("Output/biggest_trees.csv"))
+write_csv(biggest_trees, here("Output/biggest_trees.csv"))
 ```
 
 <!----------------------------------------------------------------------------->
