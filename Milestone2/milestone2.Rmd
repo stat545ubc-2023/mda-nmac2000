@@ -118,12 +118,12 @@ curb_plot <- vancouver_trees2 %>%
   filter(diameter > 10)
   
   
-ggplot(curb_plot, aes(diameter, height_range_id, colour = curb)) +
+ggplot(vancouver_trees2, aes(diameter, height_range_id, colour = curb)) +
   geom_point( position = "jitter", aes(alpha=diameter),size=.5) +
   geom_smooth(method = "lm") +
   xlim(0,100) +
   scale_alpha(range = c(0.01,1), breaks = c(1,50,100), n.breaks=2, name=NULL,label=NULL)
-  
+
  #geom_hex
 ```
 
@@ -179,8 +179,6 @@ ggplot(trees_age, aes(age_num, log(diameter))) +
   xlab("Age (years)") +
   ylab("Diameter (logged inches)") +
   scale_color_discrete(name="Height")
-  
-
 
 ```
 
@@ -249,10 +247,13 @@ Based on the definition above, can you identify if your data is tidy or untidy? 
 
 <!--------------------------- Start your work below --------------------------->
 ```{r}
-glimpse(vancouver_trees)
+
+tidy_trees <- vancouver_trees %>% 
+  select(c(tree_id, genus_name, neighbourhood_name, plant_area, curb, height_range_id, diameter, age_num))
+glimpse(tidy_trees)
 ```
 
-
+For the most part, the data is tidy. There are some NA's in the age category, which meant that there was no record for date planted. But otherwise, each row is an observation, each column is a variable, and each cell has a value.
 <!----------------------------------------------------------------------------->
 
 ### 2.2 (4 points)
@@ -265,14 +266,19 @@ Be sure to explain your reasoning for this task. Show us the "before" and "after
 
 <!--------------------------- Start your work below --------------------------->
 ```{r}
-glimpse(vancouver_trees)
-vancouver_trees2 <- vancouver_trees %>% #tidying the data
-  select(c(tree_id, genus_name, neighbourhood_name, plant_area, curb, height_range_id, diameter, age_num)) %>% 
-  filter(!is.na(genus_name), !is.na(neighbourhood_name), !is.na(height_range_id), !is.na(diameter), !is.na(curb), !is.na(age_num)) 
-vancouver_trees2 <- vancouver_trees
-glimpse(vancouver_trees2)
+glimpse(tidy_trees) #before
+#untidy the data
+untidy_trees <- tidy_trees %>%  #going to combine age and height 
+  unite("age_height", c(height_range_id, age_num), sep = ":")
+glimpse(untidy_trees) #after
+
+#tidy the data
+
+tidy_trees <- untidy_trees %>% 
+  separate(age_height, c("height_range_id", "age_num"), ":") %>% 
+  filter(!is.na(age_num)) #remove NA values
+glimpse(tidy_trees) #after
 ```
- There were a lot of NA values in the age column
 <!----------------------------------------------------------------------------->
 
 ### 2.3 (4 points)
@@ -299,10 +305,11 @@ Now, try to choose a version of your data that you think will be appropriate to 
 <!--------------------------- Start your work below --------------------------->
 ```{r}
 vancouver_trees2 <- vancouver_trees %>% #tidying the data
-  select(c(tree_id, genus_name, neighbourhood_name, plant_area, curb, height_range_id, diameter, age_num)) %>% 
-  filter(!is.na(genus_name), !is.na(neighbourhood_name), !is.na(height_range_id), !is.na(diameter), !is.na(curb), !is.na(age_num))
-vancouver_trees2 <- vancouver_trees2 %>% 
- mutate(age_bins=cut(age_num, breaks = c(-Inf,10,20,Inf), labels=c("sappling", "young", "mature")))
+  mutate(age = as.numeric(Sys.Date()-vancouver_trees$date_planted)/365) %>% #create age column
+  select(c(tree_id, genus_name, species_name, neighbourhood_name, curb, height_range_id, diameter, age)) %>% #drop irrelevant columns
+  filter(!is.na(age), diameter < 100) %>%  #get rid of NA values and unlikely measurements
+  unite("full_name", c(genus_name, species_name)) #getting full scientific name for each tree, can be good to compare heights/diameter across species
+
 
 ```
 
@@ -332,7 +339,7 @@ Fit a model or run a hypothesis test that provides insight on this variable with
 
 <!-------------------------- Start your work below ---------------------------->
 ```{r}
-model1 <- lm(diameter ~ curb + height_range_id + age_num, data=vancouver_trees2)
+model1 <- lm(diameter ~ curb + height_range_id + age_num, data=vancouver_trees2) #seeing if the affect curb has on diameter is significant given height and age are in the model
 summary(model1)
 ```
 
@@ -349,7 +356,8 @@ Produce something relevant from your fitted model: either predictions on Y, or a
 <!-------------------------- Start your work below ---------------------------->
 Looking at the p-value for the F-test
 ```{r}
-pull(broom::glance(model1), "p.value") #why is it zero??
+pull(broom::glance(model1), "p.value") #it is zero, because broom() cannot store the value since it is too small. 
+summary(model.1)#the p-value is greater than zero but barely.
 
 ```
 
