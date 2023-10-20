@@ -1,6 +1,6 @@
 ---
 title: "Mini Data Analysis Milestone 2"
-output: html_document
+output: github_document
 ---
 
 *To complete this milestone, you can either edit [this `.rmd` file](https://raw.githubusercontent.com/UBC-STAT/stat545.stat.ubc.ca/master/content/mini-project/mini-project-2.Rmd) directly. Fill in the sections that are commented out with `<!--- start your work here--->`. When you are done, make sure to knit to an `.md` file by changing the output in the YAML header to `github_document`, before submitting a tagged release on canvas.*
@@ -110,19 +110,20 @@ This was useful to know how the magnitude of measurements for the two categories
 8. Create a graph that has at least two geom layers.
 This graph fulfills both of these requirements. I added the lm line to the graph because there are so many points, it's hard to see the trends in the data. Additionally, I customized the alpha so that the large cluster of points had a much lower alpha transparency than the non-clustered points. Otherwise the clustered points were either way too dark or the non-clustered points were really hard to see.
 ```{r}
+# group by curb to find number of curb trees
 trees_curb <- vancouver_trees2 %>% 
   group_by(curb) %>% 
   summarise(curb_count = n())
 print(trees_curb)
-curb_plot <- vancouver_trees2 %>% 
-  filter(diameter > 10)
   
-  
+# comparing diameter vs height, grouped by curb or no curb  
 ggplot(vancouver_trees2, aes(diameter, height_range_id, colour = curb)) +
   geom_point( position = "jitter", aes(alpha=diameter),size=.5) +
   geom_smooth(method = "lm") +
   xlim(0,100) +
-  scale_alpha(range = c(0.01,1), breaks = c(1,50,100), n.breaks=2, name=NULL,label=NULL)
+  scale_alpha(range = c(0.01,1), breaks = c(1,50,100), n.breaks=2, name=NULL,label=NULL) +
+  xlab("Diameter (inches)") +
+  ylab("Height (ft/10)")
 
  #geom_hex
 ```
@@ -141,7 +142,8 @@ trees_species <- vancouver_trees2 %>%
   !genus_name %in% c( "ABIES","ARAUCARIA", "CEDRUS","CALOCEDRUS","CRYPTOMERIA","CHAMAECYPARIS","CUPRESSOCYPARIS",
                       "JUNIPERUS","METASEQUOIA","PICEA","PINUS","PSEUDOTSUGA","SCIADOPITYS","SEQUOIA","SEQUOIADENDRON",
                       "TAXODIUM","TAXUS","THUJA","TSUGA") ~ "Non-Conifer"))
-
+ 
+#now I can find the counts of conifers and non-conifers for each neighbourhood
 trees_species2 <- trees_species %>% 
   group_by(neighbourhood_name, con_or_non) %>%
   select(neighbourhood_name, con_or_non) %>%
@@ -151,8 +153,12 @@ trees_species2 <- trees_species %>%
   mutate(proportion = con_count/sum)
 print(trees_species2)
 
+#represnt it graphically
 ggplot(trees_species2, aes(con_count, neighbourhood_name)) +
-  geom_bar(stat="identity", aes(colour = con_or_non, fill = con_or_non), position = "dodge")
+  geom_bar(stat="identity", aes(colour = con_or_non, fill = con_or_non), position = "dodge") +
+  scale_fill_manual(values=c("darkgreen","lightgreen"),aesthetics = c("colour", "fill"), name="Tree Type") +
+  xlab("Tree Count") +
+  ylab("Neighborhood")
 
 ```
 
@@ -164,6 +170,7 @@ This is useful because I can use look at relative size for each age group, as tr
 It didn't really make sense for me to use something that was logarithmic here because diameter measurements were not differeing by orders of magnitude 
 
 ```{r}
+#Make a column for age from date_planted and then set up bins
 vancouver_trees2 <- vancouver_trees2 %>%  #I calculated age in Milestone1 but the vector was in difftime, not numeric
   mutate(age_num = as.numeric(age)) 
 range(vancouver_trees2$age_num, na.rm = TRUE) #what is the spread of the data so I can decide bin sizes
@@ -173,7 +180,7 @@ trees_age <- vancouver_trees2 %>%
   mutate(ftcut=cut(height_range_id, breaks = c(-Inf,4,Inf), labels = c("Over 40ft", "Under 40ft
                                                                        ")))
 
-
+#Look at age vs logged diameter. I chose to make 2 categories, over 40ft and under 40ft in height to see if there seemed to be some trend in diameter age and height
 ggplot(trees_age, aes(age_num, log(diameter))) +
   geom_point(alpha=.3, size=.5, position = "jitter", aes(colour=ftcut)) +
   xlab("Age (years)") +
@@ -193,10 +200,11 @@ This wasn't the most helpful, but it was good to see how most trees are in one g
 
 
 ```{r}
+#group diameter by neighborhood and run summary statistics
 biggest_trees <- vancouver_trees2 %>% 
   group_by(neighbourhood_name) %>%
   select(neighbourhood_name, diameter, age) %>%
-  filter(diameter > 0, diameter < 80, age > 10) %>% #some trees had a zero dbh, which either means that the tree was not yet 1.35m (height of DBH) or was not measured, wanted trees that have had some time to establish
+  filter(diameter > 0, diameter < 100, age > 10) %>% #some trees had a zero dbh, which either means that the tree was not yet 1.35m (height of DBH) or was not measured and filtered out implausible measurements, set age >10 because I wanted trees that have had some time to establish
   summarise(diam_min = min(diameter), #min
          diam_max = max(diameter), #max
          diam_mean = mean(diameter), #mean
@@ -207,6 +215,7 @@ print(biggest_trees)
 arrange(biggest_trees, -diam_mean) %>% #which neighborhood has the widest tree
 print(biggest_trees) 
 
+#Make 3 histograms with different bin sizes, I also chose to layer the 3 neighborhoods with the highest diameter mean to compare across them.
 diam_filtered <- filter(vancouver_trees2, neighbourhood_name%in%c("HASTINGS-SUNRISE","ARBUTUS-RIDGE", "WEST END"), age >10, diameter>0, diameter < 80) #Top three highest mean, also trying to get rid of the large number of really small trees in the data set
 ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
   geom_histogram(alpha=0.25, binwidth = 20)
@@ -247,7 +256,7 @@ Based on the definition above, can you identify if your data is tidy or untidy? 
 
 <!--------------------------- Start your work below --------------------------->
 ```{r}
-
+#select 8 variables
 tidy_trees <- vancouver_trees %>% 
   select(c(tree_id, genus_name, neighbourhood_name, plant_area, curb, height_range_id, diameter, age_num))
 glimpse(tidy_trees)
@@ -392,7 +401,9 @@ Write your model object from Task 3 to an R binary file (an RDS), and load it ag
 
 <!-------------------------- Start your work below ---------------------------->
 ```{r}
-
+saveRDS(model1, file = here("Output/Model1.rds"))
+model1_RDS <- readRDS(here("Output/Model1.rds"))
+model1_RDS
 ```
 
 <!----------------------------------------------------------------------------->
