@@ -93,7 +93,6 @@ Make sure it's clear what research question you are doing each operation for!
 
 <!------------------------- Start your work below ----------------------------->
 ```{r}
-
 vancouver_trees <- vancouver_trees %>%
   mutate(age = (Sys.Date()-vancouver_trees$date_planted)/365) #from Milestone1
 vancouver_trees <- vancouver_trees %>%  #I calculated age in Milestone1 but the vector was in difftime, not numeric
@@ -203,20 +202,16 @@ This wasn't the most helpful, but it was good to see how most trees are in one g
 #group diameter by neighborhood and run summary statistics
 biggest_trees <- vancouver_trees2 %>% 
   group_by(neighbourhood_name) %>%
-  select(neighbourhood_name, diameter, age) %>%
-  filter(diameter > 0, diameter < 100, age > 10) %>% #some trees had a zero dbh, which either means that the tree was not yet 1.35m (height of DBH) or was not measured and filtered out implausible measurements, set age >10 because I wanted trees that have had some time to establish
+  filter(diameter > 0, age_num > 10) %>% #some trees had a zero dbh, which either means that the tree was not yet 1.35m (height of DBH) or was not measured and filtered out implausible measurements, set age >10 because I wanted trees that have had some time to establish
   summarise(diam_min = min(diameter), #min
          diam_max = max(diameter), #max
          diam_mean = mean(diameter), #mean
          diam_sd = sd(diameter), #standard deviation
          diam_median = median(diameter)) #median
-arrange(biggest_trees, -diam_max) %>% #which neighborhood has the widest tree
-print(biggest_trees)  
-arrange(biggest_trees, -diam_mean) %>% #which neighborhood has the widest tree
-print(biggest_trees) 
+
 
 #Make 3 histograms with different bin sizes, I also chose to layer the 3 neighborhoods with the highest diameter mean to compare across them.
-diam_filtered <- filter(vancouver_trees2, neighbourhood_name%in%c("HASTINGS-SUNRISE","ARBUTUS-RIDGE", "WEST END"), age >10, diameter>0, diameter < 80) #Top three highest mean, also trying to get rid of the large number of really small trees in the data set
+diam_filtered <- filter(vancouver_trees2, neighbourhood_name%in%c("HASTINGS-SUNRISE","ARBUTUS-RIDGE", "WEST END"), diameter>0) #Top three highest mean, also trying to get rid of the large number of really small trees in the data set
 ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
   geom_histogram(alpha=0.25, binwidth = 20)
 ggplot(diam_filtered, aes(diameter, fill=neighbourhood_name)) +
@@ -348,7 +343,7 @@ Fit a model or run a hypothesis test that provides insight on this variable with
 
 <!-------------------------- Start your work below ---------------------------->
 ```{r}
-model1 <- lm(diameter ~ curb + height_range_id + age_num, data=vancouver_trees2) #seeing if the affect curb has on diameter is significant given height and age are in the model
+model1 <- lm(diameter ~ curb + height_range_id + age, data=vancouver_trees2) #seeing if the affect curb has on diameter is significant given height and age are in the model
 summary(model1)
 ```
 
@@ -366,7 +361,7 @@ Produce something relevant from your fitted model: either predictions on Y, or a
 Looking at the p-value for the F-test
 ```{r}
 pull(broom::glance(model1), "p.value") #it is zero, because broom() cannot store the value since it is too small. 
-summary(model.1)#the p-value is greater than zero but barely.
+summary(model1)#the p-value is greater than zero but barely.
 
 ```
 
